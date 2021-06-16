@@ -170,6 +170,7 @@ export default class ID3Writer {
       case 'TMED': // media type
       case 'TPUB': // label name
       case 'TCOP': // copyright
+      case 'TCMP': // compilation
       case 'TKEY': // musical key in which the sound starts
       case 'TEXT': // lyricist / text writer
       case 'TSRC': {
