@@ -233,6 +233,7 @@ const id3Buffer = Buffer.from(writer.arrayBuffer);
 - TDAT (album release date expressed as DDMM)
 - TYER (album release year)
 - TBPM (beats per minute)
+- TCMP (compilation flag)
 
 **object**
 
