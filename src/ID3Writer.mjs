@@ -26,6 +26,7 @@ export class ID3Writer {
       name,
       value: integer,
       size: getNumericFrameSize(integer.toString().length),
+      __type__: 'Integer',
     });
   }
 
@@ -41,6 +42,7 @@ export class ID3Writer {
       name,
       value: stringValue,
       size,
+      __type__: 'String',
     });
   }
 
@@ -67,6 +69,7 @@ export class ID3Writer {
         descriptionString.length,
         useUnicodeEncoding,
       ),
+      __type__: 'Picture',
     });
   }
 
@@ -81,6 +84,7 @@ export class ID3Writer {
       language: languageCode,
       description: descriptionString,
       size: getLyricsFrameSize(descriptionString.length, lyricsString.length),
+      __type__: 'Lyrics',
     });
   }
 
@@ -95,6 +99,7 @@ export class ID3Writer {
       language: languageCode,
       description: descriptionString,
       size: getCommentFrameSize(descriptionString.length, textString.length),
+      __type__: 'Comment',
     });
   }
 
@@ -106,6 +111,7 @@ export class ID3Writer {
       value: data,
       id: identifier,
       size: getPrivateFrameSize(identifier.length, data.byteLength),
+      __type__: 'Private',
     });
   }
 
@@ -121,6 +127,7 @@ export class ID3Writer {
         descriptionString.length,
         valueString.length,
       ),
+      __type__: 'UserString',
     });
   }
 
@@ -131,6 +138,7 @@ export class ID3Writer {
       name,
       value: urlString,
       size: getUrlLinkFrameSize(urlString.length),
+      __type__: 'UrlLink',
     });
   }
 
@@ -139,6 +147,7 @@ export class ID3Writer {
       name,
       value: list,
       size: getPairedTextFrameSize(list),
+      __type__: 'PairedText',
     });
   }
 
@@ -160,6 +169,7 @@ export class ID3Writer {
       type,
       timestampFormat,
       size: getSynchronisedLyricsFrameSize(text, descriptionString.length),
+      __type__: 'SynchronisedLyrics',
     });
   }
 
@@ -440,39 +450,14 @@ export class ID3Writer {
 
       offset += 2; // flags
 
-      switch (frame.name) {
-        case 'WCOM':
-        case 'WCOP':
-        case 'WOAF':
-        case 'WOAR':
-        case 'WOAS':
-        case 'WORS':
-        case 'WPAY':
-        case 'WPUB': {
+      switch (frame.__type__) {
+        case 'UrlLink': {
           writeBytes = encodeWindows1252(frame.value); // URL
           bufferWriter.set(writeBytes, offset);
           offset += writeBytes.length;
           break;
         }
-        case 'TPE1':
-        case 'TCOM':
-        case 'TCON':
-        case 'TLAN':
-        case 'TIT1':
-        case 'TIT2':
-        case 'TIT3':
-        case 'TALB':
-        case 'TPE2':
-        case 'TPE3':
-        case 'TPE4':
-        case 'TRCK':
-        case 'TPOS':
-        case 'TKEY':
-        case 'TMED':
-        case 'TPUB':
-        case 'TCOP':
-        case 'TEXT':
-        case 'TSRC': {
+        case 'String': {
           writeBytes = [1].concat(BOM); // encoding, BOM
           bufferWriter.set(writeBytes, offset);
           offset += writeBytes.length;
@@ -482,9 +467,9 @@ export class ID3Writer {
           offset += writeBytes.length;
           break;
         }
-        case 'TXXX':
-        case 'USLT':
-        case 'COMM': {
+        case 'UserString':
+        case 'Lyrics':
+        case 'Comment': {
           writeBytes = [1]; // encoding
           if (frame.name === 'USLT' || frame.name === 'COMM') {
             writeBytes = writeBytes.concat(frame.language); // language
@@ -506,10 +491,7 @@ export class ID3Writer {
           offset += writeBytes.length;
           break;
         }
-        case 'TBPM':
-        case 'TLEN':
-        case 'TDAT':
-        case 'TYER': {
+        case 'Integer': {
           offset++; // encoding
 
           writeBytes = encodeWindows1252(frame.value); // frame value
@@ -517,7 +499,7 @@ export class ID3Writer {
           offset += writeBytes.length;
           break;
         }
-        case 'PRIV': {
+        case 'Private': {
           writeBytes = encodeWindows1252(frame.id); // identifier
           bufferWriter.set(writeBytes, offset);
           offset += writeBytes.length;
@@ -528,7 +510,7 @@ export class ID3Writer {
           offset += frame.value.byteLength;
           break;
         }
-        case 'APIC': {
+        case 'Picture': {
           writeBytes = [frame.useUnicodeEncoding ? 1 : 0]; // encoding
           bufferWriter.set(writeBytes, offset);
           offset += writeBytes.length;
@@ -563,7 +545,7 @@ export class ID3Writer {
           offset += frame.value.byteLength;
           break;
         }
-        case 'IPLS': {
+        case 'PairedText': {
           writeBytes = [1]; // encoding
           bufferWriter.set(writeBytes, offset);
           offset += writeBytes.length;
@@ -591,7 +573,7 @@ export class ID3Writer {
           });
           break;
         }
-        case 'SYLT': {
+        case 'SynchronisedLyrics': {
           writeBytes = [1] // encoding
             .concat(frame.language) // language
             .concat(frame.timestampFormat) // time stamp format
