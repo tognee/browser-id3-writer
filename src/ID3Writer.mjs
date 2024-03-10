@@ -184,20 +184,21 @@ export class ID3Writer {
     this.padding = 4096;
     this.frames = [];
     this.url = '';
+    this.separateWithNull = false;
   }
 
   setFrame(frameName, frameValue) {
     switch (frameName) {
       case 'TPE1': // song artists
       case 'TCOM': // song composers
-      case 'TCON': {
-        // song genres
+      case 'TPE2': // album artist
+      case 'TCON': { // song genres
         if (!Array.isArray(frameValue)) {
           throw new Error(
             `${frameName} frame value should be an array of strings`,
           );
         }
-        const delemiter = frameName === 'TCON' ? ';' : '/';
+        const delemiter = this.separateWithNull ? String.fromCharCode(0) : (frameName === 'TCON' ? ';' : '/');
         const value = frameValue.join(delemiter);
 
         this._setStringFrame(frameName, value);
@@ -208,7 +209,6 @@ export class ID3Writer {
       case 'TIT2': // song title
       case 'TIT3': // song subtitle
       case 'TALB': // album title
-      case 'TPE2': // album artist // spec doesn't say anything about separator, so it is a string, not array
       case 'TPE3': // conductor/performer refinement
       case 'TPE4': // interpreted, remixed, or otherwise modified by
       case 'TRCK': // song number in album: 5 or 5/10
@@ -289,6 +289,12 @@ export class ID3Writer {
             'TXXX frame value should be an object with keys description and value',
           );
         }
+
+        if (Array.isArray(frameValue.value)) {
+          const delemiter = this.separateWithNull ? String.fromCharCode(0) : '/';
+          frameValue.value = frameValue.value.join(delemiter);
+        }
+
         this._setUserStringFrame(frameValue.description, frameValue.value);
         break;
       }
