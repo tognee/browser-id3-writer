@@ -28,3 +28,13 @@ export function uint7ArrayToUint28(uint7Array) {
     uint7Array[3]
   );
 }
+
+export function uint32ToUintVarArray(uint32, pad){
+  const eightBitMask = 0xff;
+  const byteCount = Math.ceil(Math.log2(uint32+1)/8);
+  const bytesArray = [];
+  for (let i = 0; i < Math.max(byteCount, pad); i++){
+    bytesArray.push((uint32 / Math.pow(2, 8*i)) & eightBitMask);
+  }
+  return bytesArray.reverse();
+}

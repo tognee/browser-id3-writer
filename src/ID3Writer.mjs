@@ -4,6 +4,7 @@ import {
   uint7ArrayToUint28,
   uint28ToUint7Array,
   uint32ToUint8Array,
+  uint32ToUintVarArray,
 } from './transform.mjs';
 import {
   getNumericFrameSize,
@@ -16,6 +17,7 @@ import {
   getPrivateFrameSize,
   getPairedTextFrameSize,
   getSynchronisedLyricsFrameSize,
+  getPopularimeterFrameSize,
 } from './sizes.mjs';
 
 export class ID3Writer {
@@ -170,6 +172,21 @@ export class ID3Writer {
       timestampFormat,
       size: getSynchronisedLyricsFrameSize(text, descriptionString.length),
       __type__: 'SynchronisedLyrics',
+    });
+  }
+
+  _setPopularimeterFrame(email, rating, count) {
+    const emailString = email.toString();
+    rating = parseInt(rating, 10);
+    if (count !== undefined) count = parseInt(Math.abs(count), 10);
+
+    this.frames.push({
+      name: 'POPM',
+      value: rating,
+      email: emailString,
+      count,
+      size: getPopularimeterFrameSize(email.length, count),
+      __type__: 'PopularimeterFrame',
     });
   }
 
@@ -394,6 +411,18 @@ export class ID3Writer {
         );
         break;
       }
+      case 'POPM': {
+        if (typeof frameValue !== 'object' || !('rating' in frameValue)) {
+          throw new Error('POPM frame value should be an object with at least a rating key');
+        }
+        if (frameValue.rating < 0 || frameValue.rating > 255) {
+          throw new Error('Incorrect POPM frame rating value');
+        }
+        if (!('email' in frameValue)) frameValue.email = '';
+
+        this._setPopularimeterFrame(frameValue.email, frameValue.rating, frameValue.count);
+        break;
+      }
       default: {
         throw new Error(`Unsupported frame ${frameName}`);
       }
@@ -615,6 +644,24 @@ export class ID3Writer {
             bufferWriter.set(writeBytes, offset);
             offset += writeBytes.length;
           });
+          break;
+        }
+        case 'PopularimeterFrame': {
+          writeBytes = encodeWindows1252(frame.email); // email
+          bufferWriter.set(writeBytes, offset);
+          offset += writeBytes.length;
+          offset += 1; // terminator
+
+          writeBytes = [frame.value]; // rating
+          bufferWriter.set(writeBytes, offset);
+          offset += writeBytes.length;
+
+          if (frame.count !== undefined){
+            writeBytes = uint32ToUintVarArray(frame.count, 4); // count
+            bufferWriter.set(writeBytes, offset);
+            offset += writeBytes.length;
+          }
+
           break;
         }
       }

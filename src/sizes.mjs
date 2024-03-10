@@ -161,3 +161,19 @@ export function getSynchronisedLyricsFrameSize(lyrics, descriptionSize) {
     encodedLyricsSize
   );
 }
+
+export function getPopularimeterFrameSize(emailSize, count) {
+  const headerSize = 10;
+  const stringTerminatorSize = 1;
+  const ratingSize = 1;
+  let countSize = 0;
+  if (count !== undefined){
+    countSize = Math.max(Math.ceil(Math.log2(count+1)/8), 4);
+  }
+
+  return headerSize +
+        emailSize +
+        stringTerminatorSize +
+        ratingSize +
+        countSize;
+}
