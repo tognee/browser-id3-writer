@@ -44,7 +44,7 @@ export class ID3Writer {
       name,
       value: stringValue,
       size,
-      __type__: 'String',
+      __type__: name === 'TDAT' ? 'Integer' : 'String',
     });
   }
 
